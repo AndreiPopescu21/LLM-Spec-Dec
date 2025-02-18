@@ -15,7 +15,7 @@ from pipelines import (
 from vllm import SamplingParams
 
 # Enable Flash Attention / KV Cache - Paged Attention is enabled by default
-os.environ['HUGGINGFACE_TOKEN'] = "FLASH_ATTN"
+os.environ['VLLM_ATTENTION_BACKEND'] = "FLASH_ATTN"
 
 def main():
     import argparse

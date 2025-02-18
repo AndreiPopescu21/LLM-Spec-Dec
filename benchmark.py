@@ -20,7 +20,7 @@ from huggingface_hub import login
 login(token=os.environ['HUGGINGFACE_TOKEN'])
 
 # Enable Flash Attention / KV Cache - Paged Attention is enabled by default
-os.environ['HUGGINGFACE_TOKEN'] = "FLASH_ATTN"
+os.environ['VLLM_ATTENTION_BACKEND'] = "FLASH_ATTN"
 
 # Global sampling parameters used across benchmarks
 SAMPLING_PARAMS = SamplingParams(
