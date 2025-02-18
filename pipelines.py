@@ -30,8 +30,8 @@ class BaseLLMPipeline(ABC):
 
 class NaiveLLMPipeline(BaseLLMPipeline):
     def setup_model(self):
-        default_params = {"model": "facebook/opt-6.7b"}
-        # default_params = {"model": "facebook/opt-125m"}
+        # By default use the normal (unquantized) model
+        default_params = {"model": "meta-llama/Meta-Llama-3-8B"}
         # Merge custom params with defaults; custom params can override defaults
         default_params.update(self.llm_kwargs)
         self.llm = LLM(**default_params)
@@ -39,11 +39,11 @@ class NaiveLLMPipeline(BaseLLMPipeline):
 class DraftModelLLMPipeline(BaseLLMPipeline):
     def setup_model(self):
         default_params = {
-            "model": "facebook/opt-6.7b",
+            # By default use the quantized model
+            "model": "neuralmagic/Meta-Llama-3.1-8B-Instruct-quantized.w8a8",
             "tensor_parallel_size": 1,
-            "speculative_model": "facebook/opt-125m",
+            "speculative_model": "meta-llama/Llama-3.2-1B-Instruct",
             "num_speculative_tokens": 5,
-            "spec_decoding_acceptance_method": "temperature_rejection_sampler",
             "enable_prefix_caching": True,
         }
         default_params.update(self.llm_kwargs)
@@ -52,12 +52,14 @@ class DraftModelLLMPipeline(BaseLLMPipeline):
 class NGramLLMPipeline(BaseLLMPipeline):
     def setup_model(self):
         default_params = {
-            "model": "facebook/opt-6.7b",
+            # By default use the quantized model
+            "model": "neuralmagic/Meta-Llama-3.1-8B-Instruct-quantized.w8a8",
             "tensor_parallel_size": 1,
             "speculative_model": "[ngram]",
-            "num_speculative_tokens": 3,
-            "ngram_prompt_lookup_max": 3,
+            "num_speculative_tokens": 5,
+            "ngram_prompt_lookup_max": 5,
             "enable_prefix_caching": True,
+            "max_model_len": 100000,
         }
         default_params.update(self.llm_kwargs)
         self.llm = LLM(**default_params)
@@ -65,11 +67,26 @@ class NGramLLMPipeline(BaseLLMPipeline):
 class MLPSpecLLMPipeline(BaseLLMPipeline):
     def setup_model(self):
         default_params = {
-            "model": "meta-llama/Meta-Llama-3.1-70B-Instruct",
+            # By default use the quantized model
+            "model": "neuralmagic/Meta-Llama-3.1-8B-Instruct-quantized.w8a8",
             "tensor_parallel_size": 1,
-            "speculative_model": "ibm-ai-platform/llama3-70b-accelerator",
+            "speculative_model": "ibm-ai-platform/llama3-8b-accelerator",
             "speculative_draft_tensor_parallel_size": 1,
             "enable_prefix_caching": True,
+            "max_model_len": 100000,
+        }
+        default_params.update(self.llm_kwargs)
+        self.llm = LLM(**default_params)
+
+class EAGLELLMPipeline(BaseLLMPipeline):
+    def setup_model(self):
+        default_params = {
+            # By default use the quantized model
+            "model": "neuralmagic/Meta-Llama-3.1-8B-Instruct-quantized.w8a8",
+            "tensor_parallel_size": 1,
+            "speculative_model": "yuhuili/EAGLE-LLaMA3-Instruct-8B",
+            "speculative_draft_tensor_parallel_size": 1,
+            "max_model_len": 100000,
         }
         default_params.update(self.llm_kwargs)
         self.llm = LLM(**default_params)

@@ -7,13 +7,20 @@ import numpy as np
 repo_path = os.path.abspath("vllm")
 sys.path.insert(0, repo_path)
 
-from Pipelines import (
+from pipelines import (
     NaiveLLMPipeline,
     DraftModelLLMPipeline,
     NGramLLMPipeline,
     MLPSpecLLMPipeline,
+    EAGLELLMPipeline,
 )
 from vllm import SamplingParams
+from huggingface_hub import login
+
+login(token=os.environ['HUGGINGFACE_TOKEN'])
+
+# Enable Flash Attention / KV Cache - Paged Attention is enabled by default
+os.environ['HUGGINGFACE_TOKEN'] = "FLASH_ATTN"
 
 # Global sampling parameters used across benchmarks
 SAMPLING_PARAMS = SamplingParams(
@@ -24,18 +31,23 @@ SAMPLING_PARAMS = SamplingParams(
 )
 
 class LatencyBenchmark():
-    def __init__(self, num_iters=10, num_iters_warmup=3, output_json=None, batch_size=4, input_len=20):
+    def __init__(self, num_iters=20, num_iters_warmup=3, output_json=None, batch_size=32, input_len=20):
         self.num_iters = num_iters
         self.num_iters_warmup = num_iters_warmup
         self.output_json = output_json
         self.batch_size = batch_size
         self.input_len = input_len
+        # Always generate the synthetic prompts with the same seed
         np.random.seed(42) 
         self.prompts = self.generate_random_prompts()
         self.warmup_prompts = self.generate_random_prompts()
 
     def generate_random_prompts(self):
-        dummy_prompt_token_ids = np.random.randint(32, size=(self.batch_size, self.input_len))
+        """
+            Data generation inspired from the official repository
+            https://github.com/vllm-project/vllm/blob/main/benchmarks/benchmark_latency.py
+        """
+        dummy_prompt_token_ids = np.random.randint(32, size=(self.batch_size, 128))
         return [{"prompt_token_ids": batch} for batch in dummy_prompt_token_ids.tolist()]
 
     def run_to_completion(self, pipeline, prompts):
@@ -77,17 +89,22 @@ class LatencyBenchmark():
         return latencies
 
 class ThroughputBenchmark():
-    def __init__(self, num_iters=10, num_iters_warmup=3, batch_size=4, output_json=None):
+    def __init__(self, num_iters=20, num_iters_warmup=3, batch_size=32, output_json=None):
         self.num_iters = num_iters
         self.num_iters_warmup = num_iters_warmup
         self.batch_size = batch_size
         self.output_json = output_json
+        # Always generate the synthetic prompts with the same seed
         np.random.seed(42) 
         self.prompts = self.generate_random_prompts()
         self.warmup_prompts = self.generate_random_prompts()
 
     def generate_random_prompts(self):
-        dummy_prompt_token_ids = np.random.randint(32, size=(self.batch_size, 20))
+        """
+            Data generation inspired from the official repository
+            https://github.com/vllm-project/vllm/blob/main/benchmarks/benchmark_latency.py
+        """
+        dummy_prompt_token_ids = np.random.randint(32, size=(self.batch_size, 128))
         return [{"prompt_token_ids": batch} for batch in dummy_prompt_token_ids.tolist()]
 
     def run_throughput(self, pipeline, prompts):
@@ -173,7 +190,7 @@ def benchmark_samplers(sampling_params, temperature_values=[0.5, 1.0, 1.5]):
                     throughput_output_prefix=f"throughput_{method}_temp{temp}"
                 )
                 print("-" * 50)
-                del pipeline  # Optional: free memory explicitly
+                del pipeline
         else:
             print(f"Benchmarking Draft Model with {method}:")
             pipeline = DraftModelLLMPipeline(
@@ -186,7 +203,7 @@ def benchmark_samplers(sampling_params, temperature_values=[0.5, 1.0, 1.5]):
                 throughput_output_prefix=f"throughput_{method}"
             )
             print("-" * 50)
-            del pipeline  # Optional: free memory explicitly
+            del pipeline
 
 
 def benchmark_pipelines(sampling_params):
@@ -195,9 +212,10 @@ def benchmark_pipelines(sampling_params):
     Uncomment or add pipelines to the dictionary as needed.
     """
     pipeline_classes = {
-        # 'naive': NaiveLLMPipeline,
-        # 'ngram': NGramLLMPipeline,
-        # 'mlp-spec': MLPSpecLLMPipeline,
+        'naive': NaiveLLMPipeline,
+        'ngram': NGramLLMPipeline,
+        'mlp-spec': MLPSpecLLMPipeline,
+        'eagle': EAGLELLMPipeline,
         'draft-model': DraftModelLLMPipeline,
     }
 
@@ -210,16 +228,15 @@ def benchmark_pipelines(sampling_params):
             throughput_output_prefix=f"throughput_{name}"
         )
         print("-" * 50)
-        del pipeline  # Optional: free memory explicitly
+        del pipeline
 
 
 def main():
-    # Uncomment the following line if you want to benchmark the sampler methods.
-    benchmark_samplers(SAMPLING_PARAMS)
-
     # Benchmark the pipelines (e.g., DraftModelLLMPipeline in this example).
     benchmark_pipelines(SAMPLING_PARAMS)
 
+    # Uncomment the following line if you want to benchmark the sampler methods.
+    benchmark_samplers(SAMPLING_PARAMS)
 
 if __name__ == '__main__':
     main()

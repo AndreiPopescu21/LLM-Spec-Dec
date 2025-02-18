@@ -10,8 +10,12 @@ from pipelines import (
     DraftModelLLMPipeline,
     NGramLLMPipeline,
     MLPSpecLLMPipeline,
+    EAGLELLMPipeline
 )
 from vllm import SamplingParams
+
+# Enable Flash Attention / KV Cache - Paged Attention is enabled by default
+os.environ['HUGGINGFACE_TOKEN'] = "FLASH_ATTN"
 
 def main():
     import argparse
@@ -49,6 +53,8 @@ def main():
         pipeline = NGramLLMPipeline(sampling_params)
     elif args.pipeline == "mlp":
         pipeline = MLPSpecLLMPipeline(sampling_params)
+    elif args.pipeline == "eagle":
+        pipeline = EAGLELLMPipeline(sampling_params)
     else:
         raise ValueError("Invalid pipeline choice")
 
