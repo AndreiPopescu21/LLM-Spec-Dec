@@ -47,7 +47,7 @@ To evaluate **latency** and **throughput** of all pipelines:
 python benchmark.py
 ```
 
-## 📂 Repository Structure
+## 📂 Created Files
 ```
 ├── pipelines.py  # Implemented speculative decoding pipelines
 ├── main.py       # CLI script to run pipelines with a prompt
