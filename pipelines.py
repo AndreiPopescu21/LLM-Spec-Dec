@@ -64,7 +64,7 @@ class NGramLLMPipeline(BaseLLMPipeline):
         default_params.update(self.llm_kwargs)
         self.llm = LLM(**default_params)
 
-class MLPSpecLLMPipeline(BaseLLMPipeline):
+class MedusaLLMPipeline(BaseLLMPipeline):
     def setup_model(self):
         default_params = {
             # By default use the quantized model

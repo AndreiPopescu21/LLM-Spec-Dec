@@ -11,8 +11,8 @@ from pipelines import (
     NaiveLLMPipeline,
     DraftModelLLMPipeline,
     NGramLLMPipeline,
-    MLPSpecLLMPipeline,
     EAGLELLMPipeline,
+    MedusaLLMPipeline
 )
 from vllm import SamplingParams
 from huggingface_hub import login
@@ -239,9 +239,9 @@ def benchmark_pipelines(sampling_params):
     pipeline_classes = {
         'naive': NaiveLLMPipeline,
         'ngram': NGramLLMPipeline,
-        'mlp-spec': MLPSpecLLMPipeline,
         'eagle': EAGLELLMPipeline,
         'draft-model': DraftModelLLMPipeline,
+        'medusa': MedusaLLMPipeline,
     }
 
     for name, pipeline_class in pipeline_classes.items():

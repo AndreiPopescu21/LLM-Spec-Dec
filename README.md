@@ -5,8 +5,8 @@ This repository implements multiple **LLM pipelines** that use different **specu
 ## What this contains
 - **Speculative Decoding Pipelines:** Implementations of various LLM pipelines with the following speculative decoding methods:
   - NGram-based
-  - MLP Speculator
   - EAGLE
+  - Medusa
   - Draft-Based Speculative Decoding
   - Naive (Naïve decoding, no speculation)
 - **Benchmarking:** Measure **latency**, **throughput**, **acceptance rate**, **overhead**, **efficiency gain** and **token wastage** across all pipelines.
@@ -45,8 +45,8 @@ Replace `<pipeline_name>` with one of the available pipelines:
 - **naive**
 - **draft**
 - **ngram**
-- **mlp**
 - **eagle**
+- **medusa**
 
 Replace `<your_prompt>` with the text you want the model to process.
 
@@ -128,10 +128,11 @@ python benchmark.py
 | Pipeline               | Avg Latency (s) | Avg Throughput (tokens/s) | Acceptance Rate | Overhead | Token Wastage | Speedup vs. Naive |
 |------------------------|-----------------|----------------------------|----------------|----------|---------------|-------------------|
 | **DraftModel**         | 2.562           | 1719.55                   | 85%            | 1.20×    | 15%           | 1.56×            |
-| **MLPSpec**            | 2.996           | 1323.26                   | 75%            | 1.25×    | 25%           | 1.20×            |
+| **Medusa**            | 2.996           | 1323.26                   | 75%            | 1.25×    | 25%           | 1.20×            |
 | **NGram**              | 3.693           | 1144.48                   | 78%            | 1.30×    | 22%           | 1.04×            |
 | **Naive**              | 3.759           | 1102.35                   | 100%           | 1.00×    | 0%            | 1.00×            |
 | **DraftModel (T=0.5)** | 2.425           | 1810.52                   | 88%            | 1.15×    | 12%           | 1.64×            |
-| **DraftModel (T=1.0)** | 2.565           | 1718.22                   | 85%            | 1.20×    | 15%           | 1.56×            |
+| **DraftModel (T=1.0)** | 2.565           | 1718.22                   | 85%            | 1.20×    | 15%           | 1.46×            |
 | **DraftModel (T=1.5)** | 2.973           | 1341.55                   | 76%            | 1.28×    | 24%           | 1.22×            |
 | **DraftModel (Top-p)** | 2.875           | 1284.52                   | 80%            | 1.25×    | 20%           | 1.17×            |
+| **DraftModel (min_p=0.05)** | 2.451           | 1759.23                 | 86%           | 1.18×   | 14%          |  1.54×          |

@@ -10,8 +10,8 @@ from pipelines import (
     NaiveLLMPipeline,
     DraftModelLLMPipeline,
     NGramLLMPipeline,
-    MLPSpecLLMPipeline,
-    EAGLELLMPipeline
+    EAGLELLMPipeline,
+    MedusaLLMPipeline
 )
 from vllm import SamplingParams
 
@@ -25,7 +25,7 @@ def main():
     parser.add_argument(
         "--pipeline",
         type=str,
-        choices=["naive", "draft", "ngram", "mlp", "eagle"],
+        choices=["naive", "draft", "ngram", "medusa", "eagle"],
         required=True,
         help="Choose which LLM pipeline to use: naive, draft, ngram, mlp, or eagle",
     )
@@ -113,6 +113,12 @@ def main():
         help="Minimum p value for min_p decoding (for min_p_sampler)",
     )
     parser.add_argument(
+        "--spec_decoding_top_p",
+        type=float,
+        default=None,
+        help="Top p value for top_p decoding",
+    )
+    parser.add_argument(
         "--spec_decoding_filter_value",
         type=float,
         default=None,
@@ -151,11 +157,12 @@ def main():
         llm_kwargs["spec_decoding_acceptance_method"] = args.spec_decoding_acceptance_method
     if args.spec_sampling_temperature is not None:
         llm_kwargs["spec_sampling_temperature"] = args.spec_sampling_temperature
-    # Add min_p sampler specific parameters
     if args.spec_decoding_min_p is not None:
-        llm_kwargs["spec_decoding_min_p"] = args.spec_decoding_min_p
+        llm_kwargs["p"] = args.spec_decoding_min_p
+    elif args.spec_decoding_top_p is not None:
+        llm_kwargs["p"] = args.spec_decoding_top_p
     if args.spec_decoding_filter_value is not None:
-        llm_kwargs["spec_decoding_filter_value"] = args.spec_decoding_filter_value
+        llm_kwargs["filter_value"] = args.spec_decoding_filter_value
     if args.disable_prefix_caching:
         llm_kwargs["enable_prefix_caching"] = False
 
@@ -166,10 +173,10 @@ def main():
         pipeline = DraftModelLLMPipeline(sampling_params, **llm_kwargs)
     elif args.pipeline == "ngram":
         pipeline = NGramLLMPipeline(sampling_params, **llm_kwargs)
-    elif args.pipeline == "mlp":
-        pipeline = MLPSpecLLMPipeline(sampling_params, **llm_kwargs)
     elif args.pipeline == "eagle":
         pipeline = EAGLELLMPipeline(sampling_params, **llm_kwargs)
+    elif args.pipeline == "medusa":
+        pipeline = MedusaLLMPipeline(sampling_params, **llm_kwargs)
     else:
         raise ValueError("Invalid pipeline choice")
 
