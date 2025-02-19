@@ -164,15 +164,22 @@ def run_benchmark(pipeline, latency_output_prefix, throughput_output_prefix, num
     throughput_benchmark.benchmark(pipeline)
 
 
-def benchmark_samplers(sampling_params, temperature_values=[0.5, 1.0, 1.5]):
+def benchmark_samplers(sampling_params, temperature_values=[0.5, 1.0, 1.5], min_p_values=[0.05, 0.1, 0.2, 0.3]):
     """
     Benchmark different acceptance methods for the DraftModelLLMPipeline.
-    For the temperature rejection sampler, multiple temperatures are evaluated.
+    - For `temperature_rejection_sampler`, multiple temperatures are evaluated.
+    - For `min_p_sampler`, multiple `min_p` values are evaluated.
+    
+    Args:
+        sampling_params: The sampling parameters for generation.
+        temperature_values (list): Different temperatures to test for temperature rejection sampling.
+        min_p_values (list): Different `min_p` values to test for min_p sampling.
     """
     acceptance_methods = [
         "rejection_sampler",
         "temperature_rejection_sampler",
         "top_p_speculative_sampler",
+        "min_p_sampler",
     ]
 
     for method in acceptance_methods:
@@ -182,7 +189,7 @@ def benchmark_samplers(sampling_params, temperature_values=[0.5, 1.0, 1.5]):
                 pipeline = DraftModelLLMPipeline(
                     sampling_params,
                     spec_decoding_acceptance_method=method,
-                    spec_decoding_temperature=temp,
+                    spec_sampling_temperature=temp,
                 )
                 run_benchmark(
                     pipeline,
@@ -191,6 +198,24 @@ def benchmark_samplers(sampling_params, temperature_values=[0.5, 1.0, 1.5]):
                 )
                 print("-" * 50)
                 del pipeline
+
+        elif method == "min_p_sampler":
+            for min_p in min_p_values:
+                print(f"Benchmarking Draft Model with {method} (min_p={min_p}):")
+                pipeline = DraftModelLLMPipeline(
+                    sampling_params,
+                    spec_decoding_acceptance_method=method,
+                    spec_decoding_min_p=min_p,
+                    spec_decoding_filter_value=-float('inf'),  # Default filter value, can be parameterized if needed
+                )
+                run_benchmark(
+                    pipeline,
+                    latency_output_prefix=f"latency_{method}_minp{min_p}",
+                    throughput_output_prefix=f"throughput_{method}_minp{min_p}"
+                )
+                print("-" * 50)
+                del pipeline
+
         else:
             print(f"Benchmarking Draft Model with {method}:")
             pipeline = DraftModelLLMPipeline(
